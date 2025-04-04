@@ -120,8 +120,8 @@ int handleXorN( int argc, char** argv ) {
 	
 	for( size_t i = 1; i < argc - 1; i++ ) {
 		FILE* handle = fopen( argv[i], "r" );
-		if( !handle ){ free( storage ); return ERR_NO_SUCH_RESOURCE; }
-		if( ferror( handle ) ) { free( storage ); return ERR_NO_SUCH_RESOURCE; }
+		if( !handle ){ free( storage ); fclose( handle ); return ERR_NO_SUCH_RESOURCE; }
+		if( ferror( handle ) ) { free( storage ); fclose( handle ); return ERR_NO_SUCH_RESOURCE; }
 		
 		int c;
 		while( (c=fgetc( handle )) != EOF ) {
@@ -146,8 +146,8 @@ int handleMask( int argc, char** argv ) {
 	
 	for( size_t i = 1; i < argc - 2; i++ ) {
 		FILE* handle = fopen( argv[i], "r" );
-		if( ferror( handle ) ) return ERR_NO_SUCH_RESOURCE;
-		if( !handle ) return ERR_NO_SUCH_RESOURCE;
+		if( ferror( handle ) ) { fclose( handle ); return ERR_NO_SUCH_RESOURCE; }
+		if( !handle ) { fclose( handle ); return ERR_NO_SUCH_RESOURCE; }
 		
 		int read;
 		uint32_t c;
@@ -171,11 +171,14 @@ int handleMask( int argc, char** argv ) {
 int handleCopyN( int argc, char** argv ) {
 	int value = strcmpno( "copyN", argv[argc-1] );
 	
+	int err = 0;
+	int newerr = 0;
 	for( size_t argn = 1; argn < argc - 1; ++argn ) {
 		pid_t pid = fork();
 		switch( pid ) {
 			case -1:
-				return ERR_NO_SUCH_RESOURCE;
+				err = ERR_NO_SUCH_RESOURCE;
+				break;
 			case 0:
 				char cwd[1024];
 				char out[1536];
@@ -190,20 +193,24 @@ int handleCopyN( int argc, char** argv ) {
 			default:
 				break;
 		}
+		
+		if( err ) break;
 	}
-	int err = 0;
-	int newerr = 0;
 	pid_t wpid;
 	while ( (wpid = wait(&newerr)) > 0 ) err |= newerr;
 	return err;
 }
 
 int handleFind( int argc, char** argv ) {
+	
+	int err = 0;
+	int newerr = 0;
 	for( size_t argn = 1; argn < argc - 2; ++argn ) {
 		pid_t pid = fork();
 		switch( pid ) {
 			case -1:
-				return ERR_NO_SUCH_RESOURCE;
+				err = ERR_NO_SUCH_RESOURCE;
+				break;
 			case 0:
 				
 				char cwd[1024];
@@ -219,9 +226,10 @@ int handleFind( int argc, char** argv ) {
 			default:
 				break;
 		}
+		if( err ) break;
 	}
-	int err = 0;
-	wait(&err);
+	pid_t wpid;
+	while ( (wpid = wait(&newerr)) > 0 ) err |= newerr;
 	return err;
 }
 

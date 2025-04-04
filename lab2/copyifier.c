@@ -38,9 +38,17 @@ int cpf( char* source, char* destination ) {
     size_t bytesRead;
 	
     while( (bytesRead = fread( buffer, 1, sizeof(buffer), src )) > 0)  {
-		if( ferror( src ) ) return ERR_NO_SUCH_RESOURCE;
+		if( ferror( src ) ) {
+			fclose(src);
+			fclose(dst);
+			return ERR_NO_SUCH_RESOURCE;
+		}
 		fwrite(buffer, 1, bytesRead, dst); 
-		if( ferror( dst ) ) return ERR_NO_SUCH_RESOURCE;
+		if( ferror( src ) ) {
+			fclose(src);
+			fclose(dst);
+			return ERR_NO_SUCH_RESOURCE;
+		}
 	}
 
     fclose(src);
