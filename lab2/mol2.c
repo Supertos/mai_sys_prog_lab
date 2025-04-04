@@ -192,7 +192,9 @@ int handleCopyN( int argc, char** argv ) {
 		}
 	}
 	int err = 0;
-	wait(&err);
+	int newerr = 0;
+	pid_t wpid;
+	while ( (wpid = wait(&newerr)) > 0 ) err |= newerr;
 	return err;
 }
 

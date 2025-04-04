@@ -50,7 +50,6 @@ int cpf( char* source, char* destination ) {
 }
 
 int main( int argc, char** argv ) {
-	printf("AAA!");
 	if( argc != 3 ) return ERR_OUT_OF_RANGE;
 	
 	int num = atoi( argv[1] );
@@ -73,9 +72,11 @@ int main( int argc, char** argv ) {
 	for( size_t i = 0; i < num; ++i ) {
 		snprintf(dest, strsize, "%s%ld.%s", path, i, ext);
 		err = cpf( argv[2], dest );
-		if( err ) return err;
+		if( err ) break;
 	}
 	
+	free( dest );
+	free( path );
 	return err;
 }
 
